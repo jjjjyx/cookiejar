@@ -107,10 +107,10 @@ type entry struct {
 
 	CanonicalHost string
 
-	// seqNum is a sequence number so that Cookies returns cookies in a
+	// SeqNum is a sequence number so that Cookies returns cookies in a
 	// deterministic order, even for cookies that have equal Path length and
 	// equal Creation time. This simplifies testing.
-	seqNum uint64
+	SeqNum uint64
 }
 
 // id returns the domain;path;name triple of e as an id.
@@ -219,7 +219,7 @@ func (j *Jar) cookies(u *url.URL, now time.Time) (cookies []*http.Cookie) {
 		if !s[i].Creation.Equal(s[j].Creation) {
 			return s[i].Creation.Before(s[j].Creation)
 		}
-		return s[i].seqNum < s[j].seqNum
+		return s[i].SeqNum < s[j].SeqNum
 	})
 	for _, e := range selected {
 		cookies = append(cookies, &http.Cookie{Name: e.Name, Value: e.Value})
@@ -277,10 +277,10 @@ func (j *Jar) setCookies(u *url.URL, cookies []*http.Cookie, now time.Time) {
 
 		if old, ok := submap[id]; ok {
 			e.Creation = old.Creation
-			e.seqNum = old.seqNum
+			e.SeqNum = old.SeqNum
 		} else {
 			e.Creation = now
-			e.seqNum = j.nextSeqNum
+			e.SeqNum = j.nextSeqNum
 			j.nextSeqNum++
 		}
 		e.LastAccess = now

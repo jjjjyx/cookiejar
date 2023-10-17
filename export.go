@@ -1,6 +1,8 @@
 package cookiejar
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
 	"sort"
 	"time"
@@ -95,4 +97,26 @@ func (j *Jar) GetCookies() []*http.Cookie {
 	sortEntry(selected)
 
 	return entryToHttpCookie(selected)
+}
+
+// Save 序列化
+func (j *Jar) Save() (string, error) {
+	//entries := j.allPersistentEntries()
+	ret, err := json.Marshal(j.entries)
+	if err != nil {
+		return "", err
+	}
+
+	return string(ret), err
+}
+
+// Load 导入序列化的结果
+func (j *Jar) Load(data string) error {
+	//var entries []entry
+	if err := json.Unmarshal([]byte(data), &j.entries); err != nil {
+		log.Printf("warning: discarding cookies in invalid format (error: %v)", err)
+		return err
+	}
+
+	return nil
 }
