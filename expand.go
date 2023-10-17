@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 	"sort"
 	"time"
 )
@@ -119,4 +120,11 @@ func (j *Jar) Load(data string) error {
 	}
 
 	return nil
+}
+
+// SetCookiesV2 implements the SetCookies method of the http.CookieJar interface.
+//
+// 返回 是否修改了cookie
+func (j *Jar) SetCookiesV2(u *url.URL, cookies []*http.Cookie) bool {
+	return j.setCookies(u, cookies, time.Now())
 }

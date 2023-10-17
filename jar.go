@@ -236,16 +236,16 @@ func (j *Jar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 }
 
 // setCookies is like SetCookies but takes the current time as parameter.
-func (j *Jar) setCookies(u *url.URL, cookies []*http.Cookie, now time.Time) {
+func (j *Jar) setCookies(u *url.URL, cookies []*http.Cookie, now time.Time) bool {
 	if len(cookies) == 0 {
-		return
+		return false
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
-		return
+		return false
 	}
 	host, err := canonicalHost(u.Host)
 	if err != nil {
-		return
+		return false
 	}
 	key := jarKey(host, j.psList)
 	defPath := defaultPath(u.Path)
@@ -295,6 +295,7 @@ func (j *Jar) setCookies(u *url.URL, cookies []*http.Cookie, now time.Time) {
 			j.entries[key] = submap
 		}
 	}
+	return modified
 }
 
 // canonicalHost strips port from host if present and returns the canonicalized
