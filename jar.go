@@ -105,6 +105,8 @@ type entry struct {
 	LastAccess time.Time
 	MaxAge     int
 
+	// 原始domain 这个是为了在导出的时候能够知道原始的 set-cookie 域名是什么
+	OriginDomain  string
 	CanonicalHost string
 
 	// SeqNum is a sequence number so that Cookies returns cookies in a
@@ -396,6 +398,7 @@ func defaultPath(path string) string {
 func (j *Jar) newEntry(c *http.Cookie, now time.Time, defPath, host string) (e entry, remove bool, err error) {
 	e.Name = c.Name
 	e.CanonicalHost = host
+	e.OriginDomain = c.Domain
 
 	if c.Path == "" || c.Path[0] != '/' {
 		e.Path = defPath
@@ -426,6 +429,11 @@ func (j *Jar) newEntry(c *http.Cookie, now time.Time, defPath, host string) (e e
 			e.Persistent = true
 		}
 	}
+
+	if e.OriginDomain == "" {
+		e.OriginDomain = e.Domain
+	}
+
 	e.MaxAge = c.MaxAge
 	e.Value = c.Value
 	e.Secure = c.Secure

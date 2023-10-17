@@ -39,7 +39,7 @@ func entryToHttpCookie(entries []entry) []*http.Cookie {
 			Name:     e.Name,
 			Value:    e.Value,
 			Path:     e.Path,
-			Domain:   e.Domain,
+			Domain:   e.OriginDomain,
 			Expires:  e.Expires,
 			Secure:   e.Secure,
 			HttpOnly: e.HttpOnly,

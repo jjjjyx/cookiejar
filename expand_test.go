@@ -224,3 +224,41 @@ func TestSave(t *testing.T) {
 	}
 
 }
+
+func TestDomain(t *testing.T) {
+	jar, err := New(nil)
+	if err != nil {
+		fmt.Println("Error creating cookie jar:", err)
+		return
+	}
+
+	// Define a sample URL
+	baseURL, _ := url.Parse("https://xxxx.example.com")
+
+	// Add some cookies to the jar (you can add your own cookies)
+	cookie1 := &http.Cookie{
+		Name:   "cookie1",
+		Value:  "value1",
+		Domain: ".example.com",
+
+		//Expires:  someTime, // Set the expiration time
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/path",
+	}
+
+	jar.SetCookies(baseURL, []*http.Cookie{cookie1})
+
+	cookies := jar.GetAllCookies()
+
+	if len(cookies) != 1 {
+		t.Errorf("cookie 的数量应该是 1, 实际 = %d", len(cookies))
+	}
+	cookie := cookies[0]
+	if cookie.Domain != ".example.com" {
+		fmt.Println(cookie.Domain)
+		t.Errorf("cookie 的域名应该是 '.example.com', 实际 = %s", cookie.Domain)
+	}
+	//fmt.Println(cookies)
+
+}
