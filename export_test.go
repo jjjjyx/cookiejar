@@ -1,0 +1,157 @@
+package cookiejar
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"net/url"
+	"testing"
+)
+
+func TestGetAllCookies(t *testing.T) {
+	jar, err := New(nil)
+	if err != nil {
+		fmt.Println("Error creating cookie jar:", err)
+		return
+	}
+
+	// Define a sample URL
+	baseURL, _ := url.Parse("https://example.com")
+
+	// Add some cookies to the jar (you can add your own cookies)
+	cookie1 := &http.Cookie{
+		Name:   "cookie1",
+		Value:  "value1",
+		Domain: "example.com",
+		//Expires:  someTime, // Set the expiration time
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/path",
+	}
+	// 过期的
+	cookie2 := &http.Cookie{
+		Name:    "cookie2",
+		Value:   "value2",
+		Domain:  "example.com",
+		Expires: time.Now().Add(1 * time.Second),
+		//Expires:  someTime, // Set the expiration time
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/path",
+	}
+
+	// 跨域的域名
+	cookie3 := &http.Cookie{
+		Name:   "cookie3",
+		Value:  "value3",
+		Domain: "www.abc.com",
+		//Expires:  someTime, // Set the expiration time
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/path",
+	}
+
+	//// maxAge
+	//cookie3 := &http.Cookie{
+	//	Name:   "cookie3",
+	//	Value:  "value3",
+	//	Domain: "www.abc.com",
+	//	//Expires:  someTime, // Set the expiration time
+	//	HttpOnly: true,
+	//	Secure:   true,
+	//	Path:     "/path",
+	//}
+
+	jar.SetCookies(baseURL, []*http.Cookie{cookie1, cookie2, cookie3})
+
+	cookies := jar.GetAllCookies()
+
+	if len(cookies) != 2 {
+		t.Errorf("cookie 的数量应该是 2, 实际 = %d", len(cookies))
+	}
+
+	time.Sleep(2 * time.Second)
+
+	cookies = jar.GetAllCookies()
+
+	if len(cookies) != 2 {
+		t.Errorf("cookie 的数量应该是 2, 实际 = %d", len(cookies))
+	}
+
+	cookies = jar.GetCookies()
+
+	if len(cookies) != 1 {
+		t.Errorf("cookie 的数量应该是 1, 实际 = %d", len(cookies))
+	}
+	//fmt.Println(cookies)
+
+}
+
+func TestMaxAge(t *testing.T) {
+	jar, err := New(nil)
+	if err != nil {
+		fmt.Println("Error creating cookie jar:", err)
+		return
+	}
+
+	// Define a sample URL
+	baseURL, _ := url.Parse("https://example.com")
+
+	// Add some cookies to the jar (you can add your own cookies)
+	cookie1 := &http.Cookie{
+		Name:   "cookie1",
+		Value:  "value1",
+		Domain: "example.com",
+
+		//Expires:  someTime, // Set the expiration time
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/path",
+	}
+	cookie2 := &http.Cookie{
+		Name:   "cookie2",
+		Value:  "value2",
+		Domain: "example.com",
+		MaxAge: -1,
+		//Expires:  someTime, // Set the expiration time
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/path",
+	}
+
+	cookie3 := &http.Cookie{
+		Name:   "cookie3",
+		Value:  "value3",
+		Domain: "example.com",
+		MaxAge: 2, // 2秒后过期
+		//Expires:  someTime, // Set the expiration time
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/path",
+	}
+
+	jar.SetCookies(baseURL, []*http.Cookie{cookie1, cookie2, cookie3})
+
+	cookies := jar.GetAllCookies()
+
+	if len(cookies) != 2 {
+		t.Errorf("cookie 的数量应该是 2")
+	}
+
+	time.Sleep(2 * time.Second)
+
+	cookies = jar.GetAllCookies()
+
+	if len(cookies) != 2 {
+		t.Errorf("cookie 的数量应该是 2, 实际 = %d", len(cookies))
+	}
+
+	cookies = jar.GetCookies()
+
+	if len(cookies) != 1 {
+		t.Errorf("cookie 的数量应该是 1, 实际 = %d", len(cookies))
+	}
+	//fmt.Println(cookies)
+
+}
