@@ -128,3 +128,68 @@ func (j *Jar) Load(data string) error {
 func (j *Jar) SetCookiesV2(u *url.URL, cookies []*http.Cookie) bool {
 	return j.setCookies(u, cookies, time.Now())
 }
+
+func (j *Jar) CookiesV2(u *url.URL) (cookies []*http.Cookie) {
+	now := time.Now()
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return cookies
+	}
+	host, err := canonicalHost(u.Host)
+	if err != nil {
+		return cookies
+	}
+	key := jarKey(host, j.psList)
+
+	j.mu.Lock()
+	defer j.mu.Unlock()
+
+	submap := j.entries[key]
+	if submap == nil {
+		return cookies
+	}
+
+	https := u.Scheme == "https"
+	path := u.Path
+	if path == "" {
+		path = "/"
+	}
+
+	modified := false
+	var selected []entry
+	for id, e := range submap {
+		if e.Persistent && !e.Expires.After(now) {
+			delete(submap, id)
+			modified = true
+			continue
+		}
+		if !e.shouldSend(https, host, path) {
+			continue
+		}
+		e.LastAccess = now
+		submap[id] = e
+		selected = append(selected, e)
+		modified = true
+	}
+	if modified {
+		if len(submap) == 0 {
+			delete(j.entries, key)
+		} else {
+			j.entries[key] = submap
+		}
+	}
+
+	// sort according to RFC 6265 section 5.4 point 2: by longest
+	// path and then by earliest creation time.
+	sort.Slice(selected, func(i, j int) bool {
+		s := selected
+		if len(s[i].Path) != len(s[j].Path) {
+			return len(s[i].Path) > len(s[j].Path)
+		}
+		if !s[i].Creation.Equal(s[j].Creation) {
+			return s[i].Creation.Before(s[j].Creation)
+		}
+		return s[i].SeqNum < s[j].SeqNum
+	})
+
+	return entryToHttpCookie(selected)
+}
