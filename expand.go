@@ -103,6 +103,8 @@ func (j *Jar) GetCookies() []*http.Cookie {
 // Save 序列化
 func (j *Jar) Save() (string, error) {
 	//entries := j.allPersistentEntries()
+	j.mu.Lock()
+	defer j.mu.Unlock()
 	ret, err := json.Marshal(j.entries)
 	if err != nil {
 		return "", err
@@ -113,6 +115,9 @@ func (j *Jar) Save() (string, error) {
 
 // Load 导入序列化的结果
 func (j *Jar) Load(data string) error {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+
 	//var entries []entry
 	if err := json.Unmarshal([]byte(data), &j.entries); err != nil {
 		log.Printf("warning: discarding cookies in invalid format (error: %v)", err)
